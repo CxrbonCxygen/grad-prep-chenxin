@@ -1,0 +1,14 @@
+{
+  "paper": "Ho et al., Denoising Diffusion Probabilistic Models, NeurIPS 2020",
+  "device": "cpu",
+  "model_params": 642817,
+  "timesteps": 1000,
+  "schedule": "cosine",
+  "epochs": 20,
+  "train_samples": 20000,
+  "batch_size": 128,
+  "lr": 0.0002,
+  "final_loss": 0.0324967580441481,
+  "best_loss": 0.03232659820992595,
+  "wall_clock_sec": 3748.3
+}

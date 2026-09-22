@@ -1,0 +1,7 @@
+{
+  "num_samples": 64,
+  "timesteps": 1000,
+  "total_sec": 217.13,
+  "sec_per_sample": 3.393,
+  "device": "cpu"
+}

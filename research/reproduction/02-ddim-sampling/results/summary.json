@@ -1,0 +1,116 @@
+{
+  "checkpoint": "C:\\Users\\Administrator\\WorkBuddy\\2026-09-22-10-17-21\\grad-prep-chenxin\\research\\reproduction\\01-ddpm-mnist\\results\\ddpm_mnist.pt",
+  "n_images_per_config": 128,
+  "real_ref_images": 2048,
+  "note": "FID 为自训练 MNIST 分类器特征空间的 Fréchet 距离近似，样本量有限，仅供相对比较。",
+  "rows": [
+    {
+      "sampler": "ddim",
+      "steps": 1000,
+      "time_s": 374.44,
+      "sec_per_image": 2.925,
+      "fid": 31.0543,
+      "conf": 0.7385,
+      "entropy": 2.014
+    },
+    {
+      "sampler": "ddim",
+      "steps": 250,
+      "time_s": 90.92,
+      "sec_per_image": 0.71,
+      "fid": 15.0461,
+      "conf": 0.7701,
+      "entropy": 2.1596
+    },
+    {
+      "sampler": "ddim",
+      "steps": 100,
+      "time_s": 38.38,
+      "sec_per_image": 0.3,
+      "fid": 10.8595,
+      "conf": 0.7642,
+      "entropy": 2.2034
+    },
+    {
+      "sampler": "ddim",
+      "steps": 50,
+      "time_s": 17.58,
+      "sec_per_image": 0.137,
+      "fid": 10.0721,
+      "conf": 0.7791,
+      "entropy": 2.2275
+    },
+    {
+      "sampler": "ddim",
+      "steps": 20,
+      "time_s": 8.2,
+      "sec_per_image": 0.064,
+      "fid": 14.9794,
+      "conf": 0.7752,
+      "entropy": 2.1966
+    },
+    {
+      "sampler": "ddim",
+      "steps": 10,
+      "time_s": 3.81,
+      "sec_per_image": 0.03,
+      "fid": 25.2241,
+      "conf": 0.7844,
+      "entropy": 2.0917
+    },
+    {
+      "sampler": "ddpm",
+      "steps": 1000,
+      "time_s": 371.74,
+      "sec_per_image": 2.904,
+      "fid": 7.3625,
+      "conf": 0.7417,
+      "entropy": 2.2491
+    },
+    {
+      "sampler": "ddpm",
+      "steps": 250,
+      "time_s": 93.83,
+      "sec_per_image": 0.733,
+      "fid": 3.565,
+      "conf": 0.7517,
+      "entropy": 2.2326
+    },
+    {
+      "sampler": "ddpm",
+      "steps": 100,
+      "time_s": 37.27,
+      "sec_per_image": 0.291,
+      "fid": 2.2115,
+      "conf": 0.7691,
+      "entropy": 2.2349
+    },
+    {
+      "sampler": "ddpm",
+      "steps": 50,
+      "time_s": 17.99,
+      "sec_per_image": 0.141,
+      "fid": 3.1838,
+      "conf": 0.7611,
+      "entropy": 2.2113
+    },
+    {
+      "sampler": "ddpm",
+      "steps": 20,
+      "time_s": 7.1,
+      "sec_per_image": 0.055,
+      "fid": 4.5792,
+      "conf": 0.7776,
+      "entropy": 2.2218
+    },
+    {
+      "sampler": "ddpm",
+      "steps": 10,
+      "time_s": 3.9,
+      "sec_per_image": 0.03,
+      "fid": 14.6753,
+      "conf": 0.7746,
+      "entropy": 2.1971
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 实验数据与缓存（太大不入库；权重如需分享请走 Release）
+**/data/
+research/reproduction/*/_bench/
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.idea/
+.vscode/
