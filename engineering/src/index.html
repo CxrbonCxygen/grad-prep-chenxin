@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Diffusion Lab · 扩散模型交互式可视化实验台</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">◆</span>
+    <div>
+      <h1>Diffusion Lab</h1>
+      <p>扩散模型交互式可视化实验台</p>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-view="home">概览</button>
+    <button class="tab" data-view="forward">前向加噪</button>
+    <button class="tab" data-view="schedule">噪声调度对比</button>
+    <button class="tab" data-view="reverse">反向采样（2D）</button>
+    <button class="tab" data-view="cheat">公式速查</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ============ 概览 ============ -->
+  <section class="view active" id="view-home">
+    <div class="hero">
+      <h2>把扩散模型的「加噪 / 去噪」过程摊开来看</h2>
+      <p>
+        Diffusion Lab 是一个零依赖、可离线运行的单页应用。它不调用任何后端模型，
+        所有计算（闭式前向加噪、噪声调度曲线、解析 score 反向采样）都在浏览器里实时完成，
+        用来把 DDPM / DDIM 论文里的公式变成能拖、能看、能对比的东西。
+      </p>
+    </div>
+    <div class="cards">
+      <a class="card" data-goto="forward">
+        <h3>① 前向加噪</h3>
+        <p>用闭式公式 q(x_t|x_0) 把一张图从 x₀ 一路推到纯噪声，可播放、可拖时间步、可换噪声场，也支持上传自己的图。</p>
+      </a>
+      <a class="card" data-goto="schedule">
+        <h3>② 噪声调度对比</h3>
+        <p>linear / cosine / quadratic / sigmoid 四种 β 调度的 β_t、ᾱ_t、log-SNR 曲线对比，以及同一时间步下的实际加噪效果差异。</p>
+      </a>
+      <a class="card" data-goto="reverse">
+        <h3>③ 反向采样（2D）</h3>
+        <p>在高斯混合玩具数据上用<b>解析 score</b> 真实跑一遍 DDPM 与 DDIM 反向过程，对比不同采样步数下的质量与耗时。</p>
+      </a>
+      <a class="card" data-goto="cheat">
+        <h3>④ 公式速查</h3>
+        <p>DDPM / DDIM 的关键公式与参数化对照，包含 ε 预测与 score 之间的关系。</p>
+      </a>
+    </div>
+    <div class="note">
+      <b>说明：</b>图片部分只演示<b>前向</b>加噪（解析公式，无需训练）；
+      <b>反向采样</b>演示在 2D 玩具数据上用解析 score 完成，不依赖任何预训练模型——因此全部结果都是可复现的真实计算，而非预录动画。
+    </div>
+  </section>
+
+  <!-- ============ 前向加噪 ============ -->
+  <section class="view" id="view-forward">
+    <div class="panel">
+      <h2>前向扩散过程 q(x_t | x_0)</h2>
+      <p class="formula">
+        x<sub>t</sub> = √<span class="abar">ᾱ</span><sub>t</sub> · x<sub>0</sub> + √(1 − <span class="abar">ᾱ</span><sub>t</sub>) · ε,
+        &nbsp; ε ~ N(0, I)
+      </p>
+      <div class="controls">
+        <label>时间步 t
+          <input type="range" id="fw-t" min="0" max="1000" value="0" step="1" />
+          <output id="fw-t-out">0</output>
+        </label>
+        <label>调度
+          <select id="fw-sched">
+            <option value="cosine">cosine</option>
+            <option value="linear">linear</option>
+            <option value="quadratic">quadratic</option>
+            <option value="sigmoid">sigmoid</option>
+          </select>
+        </label>
+        <button id="fw-play" class="primary">▶ 播放</button>
+        <button id="fw-noise">🎲 换一组噪声</button>
+        <button id="fw-reset">⟲ 重置</button>
+        <span class="file-wrap">上传图片<input type="file" id="fw-file" accept="image/*" /></span>
+      </div>
+      <div class="fw-stage">
+        <figure><canvas id="fw-canvas" width="256" height="256"></canvas><figcaption>x<sub>t</sub></figcaption></figure>
+        <figure><canvas id="fw-orig" width="256" height="256"></canvas><figcaption>x<sub>0</sub>（原图）</figcaption></figure>
+      </div>
+      <div class="stats" id="fw-stats"></div>
+      <div class="fw-strip" id="fw-strip"></div>
+    </div>
+  </section>
+
+  <!-- ============ 噪声调度对比 ============ -->
+  <section class="view" id="view-schedule">
+    <div class="panel">
+      <h2>噪声调度对比</h2>
+      <p class="muted">
+        调度决定了每一时间步注入多少噪声。DDPM 用 linear，Improved DDPM 提出 cosine（在高分辨率下把前段加噪变缓，
+        避免大量采样步被浪费在纯噪声区）。这里同时给出 quadratic 与 sigmoid 两种常见变体。
+      </p>
+      <div class="controls">
+        <label>T（总步数）<input type="range" id="sc-T" min="100" max="1000" value="1000" step="50" /><output id="sc-T-out">1000</output></label>
+        <label><input type="checkbox" id="sc-linear" checked /> linear</label>
+        <label><input type="checkbox" id="sc-cosine" checked /> cosine</label>
+        <label><input type="checkbox" id="sc-quad" checked /> quadratic</label>
+        <label><input type="checkbox" id="sc-sigmoid" /> sigmoid</label>
+      </div>
+      <div class="charts">
+        <figure><canvas id="sc-beta" width="520" height="260"></canvas><figcaption>β<sub>t</sub>（每步注入的噪声方差）</figcaption></figure>
+        <figure><canvas id="sc-abar" width="520" height="260"></canvas><figcaption>ᾱ<sub>t</sub> = ∏(1−β)（信号保留比例）</figcaption></figure>
+        <figure><canvas id="sc-snr" width="520" height="260"></canvas><figcaption>log-SNR = log(ᾱ<sub>t</sub> / (1−ᾱ<sub>t</sub>))</figcaption></figure>
+      </div>
+      <h3>同一时间步下的实际加噪效果</h3>
+      <div class="sc-grid" id="sc-grid"></div>
+    </div>
+  </section>
+
+  <!-- ============ 反向采样 ============ -->
+  <section class="view" id="view-reverse">
+    <div class="panel">
+      <h2>反向采样：DDPM vs DDIM（2D 玩具数据，解析 score）</h2>
+      <p class="muted">
+        数据是 8 个高斯分量的混合。前向加噪后 p<sub>t</sub> 仍是高斯混合，因此
+        <b>score ∇log p<sub>t</sub>(x) 可以闭式求出</b>，再由 ε* = −√(1−ᾱ<sub>t</sub>)·∇log p<sub>t</sub>(x)
+        得到贝叶斯最优的噪声预测器。也就是说：这一步不需要训练，是"真采样"。
+      </p>
+      <div class="controls">
+        <label>采样器
+          <select id="rv-sampler"><option value="ddim">DDIM（确定性）</option><option value="ddpm">DDPM（随机）</option></select>
+        </label>
+        <label>采样步数 S
+          <input type="range" id="rv-steps" min="5" max="200" value="50" step="5" /><output id="rv-steps-out">50</output>
+        </label>
+        <label>粒子数
+          <input type="range" id="rv-particles" min="100" max="2000" value="600" step="100" /><output id="rv-particles-out">600</output>
+        </label>
+        <label>时间步选取
+          <select id="rv-spacing"><option value="uniform">均匀</option><option value="snr">按 log-SNR 等分</option></select>
+        </label>
+        <button id="rv-run" class="primary">▶ 开始采样</button>
+        <button id="rv-ab">⇄ 对比 DDPM / DDIM</button>
+      </div>
+      <div class="rv-stage">
+        <figure><canvas id="rv-canvas" width="520" height="420"></canvas><figcaption>粒子轨迹（灰度为真实密度）</figcaption></figure>
+        <div class="rv-side">
+          <div id="rv-metrics" class="stats"></div>
+          <div id="rv-legend" class="legend"></div>
+          <div class="hint" id="rv-hint">点击「开始采样」运行。灰底为真实数据密度，彩色点为采样粒子。</div>
+        </div>
+      </div>
+      <h3>不同步数下的质量 / 耗时（点击「对比」自动扫描）</h3>
+      <div class="charts">
+        <figure><canvas id="rv-ab-chart" width="520" height="280"></canvas><figcaption>采样步数 vs 平均对数似然（越高越好）</figcaption></figure>
+        <figure><canvas id="rv-ab-time" width="520" height="280"></canvas><figcaption>采样步数 vs 耗时</figcaption></figure>
+      </div>
+      <div id="rv-ab-table" class="table-wrap"></div>
+    </div>
+  </section>
+
+  <!-- ============ 公式速查 ============ -->
+  <section class="view" id="view-cheat">
+    <div class="panel">
+      <h2>关键公式速查</h2>
+      <div class="cheat-grid">
+        <div class="cheat-card">
+          <h3>前向（闭式）</h3>
+          <p class="formula">q(x<sub>t</sub>|x<sub>0</sub>) = N( √ᾱ<sub>t</sub> x<sub>0</sub>, (1−ᾱ<sub>t</sub>) I )</p>
+          <p>α<sub>t</sub>=1−β<sub>t</sub>，ᾱ<sub>t</sub>=∏<sub>s≤t</sub> α<sub>s</sub>。整条马尔可夫链可以一步跳到任意 t。</p>
+        </div>
+        <div class="cheat-card">
+          <h3>训练目标</h3>
+          <p class="formula">L<sub>simple</sub> = E<sub>t,x₀,ε</sub> ‖ ε − ε<sub>θ</sub>( √ᾱ<sub>t</sub> x₀ + √(1−ᾱ<sub>t</sub>) ε, t ) ‖²</p>
+          <p>丢掉了 ELBO 中的权重系数，让容量在所有噪声级别上均匀分配。</p>
+        </div>
+        <div class="cheat-card">
+          <h3>ε 与 score 的关系</h3>
+          <p class="formula">ε* (x<sub>t</sub>, t) = − √(1−ᾱ<sub>t</sub>) · ∇<sub>x</sub> log p<sub>t</sub>(x<sub>t</sub>)</p>
+          <p>预测噪声 ≡ 预测 score，二者只差一个随 t 变化的标量系数。</p>
+        </div>
+        <div class="cheat-card">
+          <h3>由 ε 反推 x₀</h3>
+          <p class="formula">x̂₀ = ( x<sub>t</sub> − √(1−ᾱ<sub>t</sub>) · ε<sub>θ</sub> ) / √ᾱ<sub>t</sub></p>
+        </div>
+        <div class="cheat-card">
+          <h3>DDPM 反向（随机）</h3>
+          <p class="formula">x<sub>t−1</sub> = 1/√α<sub>t</sub> ( x<sub>t</sub> − β<sub>t</sub>/√(1−ᾱ<sub>t</sub>) · ε<sub>θ</sub> ) + σ<sub>t</sub> z</p>
+          <p>σ<sub>t</sub>² = β<sub>t</sub>（或后验方差 β̃<sub>t</sub>）。每步都要注入随机噪声。</p>
+        </div>
+        <div class="cheat-card">
+          <h3>DDIM 反向（确定性）</h3>
+          <p class="formula">x<sub>t−1</sub> = √ᾱ<sub>t−1</sub> · x̂₀ + √(1−ᾱ<sub>t−1</sub>−σ<sub>t</sub>²) · ε<sub>θ</sub> + σ<sub>t</sub> z</p>
+          <p>σ<sub>t</sub>=0 时完全确定性，对应一个 ODE，因此可以在子序列 τ 上大步跳过。</p>
+        </div>
+        <div class="cheat-card">
+          <h3>两种采样器的分工</h3>
+          <ul>
+            <li>DDIM：把样本"送到"某个模式（低频/语义），步数可以极少。</li>
+            <li>DDPM 的随机项：负责模式内的高频细节与多样性，步数少了会崩。</li>
+          </ul>
+        </div>
+        <div class="cheat-card">
+          <h3>cosine 调度</h3>
+          <p class="formula">ᾱ<sub>t</sub> = cos²( ((t/T + s)/(1+s)) · π/2 ) / cos²(s·π/2)</p>
+          <p>s=8e-3。让 ᾱ 在前段下降更缓，减少"纯噪声区"的浪费步数。</p>
+        </div>
+      </div>
+      <p class="note">公式引自 Ho et al. (NeurIPS 2020) 与 Song et al. (ICLR 2021)，排版为本页面的简化写法。</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>Diffusion Lab · 陈鑫 · 计算机技术（专硕）· 工程实践作业</span>
+  <span class="muted">零依赖 · 原生 HTML/CSS/JS · 可离线运行</span>
+</footer>
+
+<script src="js/schedule.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/forward.js"></script>
+<script src="js/reverse.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
