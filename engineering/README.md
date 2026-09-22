@@ -7,13 +7,18 @@
 > 2D 反向采样用的是**解析 score**（不需要任何预训练模型），
 > 因此页面上的每一条曲线、每一次采样都是真实计算的结果，不是预录动画。
 
+**工程项目部署链接**：<https://grad-prep-chenxin.vercel.app>
+
 ## 快速开始
 
 ```bash
-# 方式一：直接双击打开（无需构建、无外部依赖）
+# 方式一：在线访问（Vercel 静态托管，无需任何配置）
+https://grad-prep-chenxin.vercel.app
+
+# 方式二：直接双击打开（无需构建、无外部依赖）
 engineering/src/index.html
 
-# 方式二：本地起个静态服务器（推荐，体验一致）
+# 方式三：本地起个静态服务器（推荐，体验一致）
 cd engineering/src
 python -m http.server 8080
 # 浏览器访问 http://127.0.0.1:8080
@@ -82,6 +87,21 @@ engineering/
 │       └── main.js      路由与各视图 UI 绑定
 └── screenshots/         运行截图（由 Playwright 自动生成）
 ```
+
+## 在线部署
+
+**工程项目部署链接**：<https://grad-prep-chenxin.vercel.app>
+
+部署平台 Vercel（静态托管，自动 HTTPS + 全球 CDN），配置要点：
+
+| 配置项 | 值 |
+|--------|----|
+| Framework Preset | `Other` |
+| Root Directory | `engineering/src`（仓库里还有 `research/`，必须限定根目录） |
+| Build / Output / Install Command | 全部留空（纯静态，无构建步骤） |
+| Production Branch | `main`（之后每次 push 自动重新部署） |
+
+因为是零依赖纯静态站点，任意静态托管都能直接跑：Cloudflare Pages / Netlify 同样只需设 Root Directory。
 
 ## 运行截图
 
